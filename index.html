@@ -293,6 +293,22 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-wi
 .boot img{height:52px;align-self:flex-start}
 .boot input{font:inherit;font-size:16px;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;width:100%;background:var(--surface);color:var(--ink)}
 a.mat{text-decoration:none}
+.dlg{overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.dlg.wide{padding-top:0;padding-bottom:0}
+.dlg .hd{position:sticky;top:0;margin:0 -20px;padding:16px 20px 12px;background:var(--surface);z-index:2;border-bottom:1px solid var(--line)}
+.dlg .ft{position:sticky;bottom:0;margin:0 -20px;padding:12px 20px 16px;background:var(--surface);z-index:2;border-top:1px solid var(--line);flex-wrap:wrap;gap:8px}
+html.modale-aperta,html.modale-aperta body{overflow:hidden}
+.c{min-height:38px}
+@media (max-width:700px){
+  .veil{padding:0;place-items:stretch}
+  .veil > .dlg.wide{max-width:none;max-height:none;height:100%;border-radius:0;padding:0 16px}
+  .dlg.wide .hd{margin:0 -16px;padding:calc(12px + env(safe-area-inset-top,0px)) 16px 12px}
+  .dlg.wide .ft{margin:0 -16px;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px))}
+  .dlg.wide .ft > .row{flex:1;flex-wrap:nowrap}
+  .dlg.wide .ft > .row .btn{flex:1;white-space:nowrap}
+  .fr3{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .fr3 > :first-child{grid-column:1/-1}
+}
 </style>
 </head>
 <body>
@@ -456,7 +472,7 @@ function navCount(pid, key){
 function header(){
   const t = S.syncAt ? new Date(S.syncAt) : null;
   const ora = t ? String(t.getHours()).padStart(2,"0")+"."+String(t.getMinutes()).padStart(2,"0") : "";
-  const stato = S.sync === "busy" ? "aggiorno…" : S.offline ? `<span class="bad">non aggiornato</span>${ora?" · dati delle "+ora:""}` : (ora ? "aggiornato alle "+ora : "");
+  const stato = inAttesa ? "salvataggio…" : S.sync === "busy" ? "aggiorno…" : S.offline ? `<span class="bad">non aggiornato</span>${ora?" · dati delle "+ora:""}` : (ora ? "aggiornato alle "+ora : "");
   return `<header class="top">
     <img class="logo" src="${LOGO}" alt="DreaMusical Teatro">
     <div class="sync"><span>${stato}</span><button type="button" data-a="refresh" aria-label="Aggiorna adesso">${ic("refresh")}</button></div>
@@ -724,7 +740,7 @@ function editorHTML(){
   const conflicts = S.blocks.filter(x => x.id !== b.id && x.date === b.date && mins(x.start) < mins(b.end) && mins(b.start) < mins(x.end))
     .map(x => ({x, who: convOf(x, sc).filter(id => cv.includes(id))})).filter(o => o.who.length);
   return `<div class="veil" data-a="closeedit"><div class="dlg wide" role="dialog" aria-modal="true" aria-label="${e.isNew?"Nuovo impegno":"Modifica impegno"}">
-    <div class="row"><h2>${e.isNew?"Nuovo impegno":"Modifica impegno"}</h2><button type="button" class="x" data-a="closeedit" aria-label="Chiudi">${ic("x")}</button></div>
+    <div class="row hd"><h2>${e.isNew?"Nuovo impegno":"Modifica impegno"}</h2><button type="button" class="x" data-a="closeedit" aria-label="Chiudi">${ic("x")}</button></div>
     <div class="form">
       <div class="fr3">
         <label class="fl">Giorno<input type="date" id="ed-date" data-e="date" value="${b.date}"></label>
@@ -745,9 +761,9 @@ function editorHTML(){
     </div>
     <div class="preview ${cv.length?"":"empty"}"><b>${cv.length} convocati</b>${cv.length?`: ${esc(cv.map(pname).join(", "))}`:" · scegli le scene o le persone"}</div>
     ${conflicts.map(o => `<div class="notice warn">${ic("alert")}<div>${esc(listIt(o.who.map(pname)))} ${o.who.length===1?"ha":"hanno"} già «${esc(titleOf(o.x, sc))}» alla stessa ora.</div></div>`).join("")}
-    <div class="row" style="justify-content:space-between">
+    <div class="row ft" style="justify-content:space-between">
       ${e.isNew ? "<span></span>" : `<button type="button" class="btn sm ${S.edit.armed?"warn":"line"}" data-a="deledit">${S.edit.armed?"Tocca ancora per eliminare":"Elimina"}</button>`}
-      <div class="row"><button type="button" class="btn line" data-a="closeedit">Annulla</button><button type="button" class="btn" data-a="saveedit" ${S.busy?"disabled":""}>${S.busy?"Salvo…":(e.isNew?"Aggiungi al programma":"Salva in bozza")}</button></div>
+      <div class="row"><button type="button" class="btn line" data-a="closeedit">Annulla</button><button type="button" class="btn" data-a="saveedit">${e.isNew?"Aggiungi":"Salva in bozza"}</button></div>
     </div>
   </div></div>`;
 }
@@ -770,12 +786,13 @@ function saveEdit(){
   if(b.conv === "auto" && !b.scenes.length){ toast("Scegli almeno una scena, oppure un altro modo di convocare."); return; }
   if(b.conv !== "auto" && !b.title.trim()) b.title = TYPE[b.type];
   if(b.conv !== "auto"){ b.scenes = []; b.only = []; }
-  S.busy = true; render();
-  chiama({azione:"salva", impegno:b}).then(d => {
-    S.busy = false; S.month = b.date.slice(0,7);
-    S.edit = null; S.modal = null; S.issues = null;
-    toast("Salvato in bozza: premi Pubblica quando il programma è pronto.");
-  }).catch(err => { S.busy = false; render(); toast(err.message); });
+  const copia = clone(b);
+  const i = S.blocks.findIndex(x => x.id === copia.id);
+  if(i === -1) S.blocks.push(copia); else S.blocks[i] = copia;
+  S.month = copia.date.slice(0,7); S.edit = null; S.modal = null; S.issues = null;
+  render();
+  toast("Salvato in bozza: premi Pubblica quando il programma è pronto.");
+  inCoda({azione:"salva", impegno:copia});
 }
 function addDays(iso, n){ const x = dt(iso); x.setDate(x.getDate()+n); return x.getFullYear()+"-"+String(x.getMonth()+1).padStart(2,"0")+"-"+String(x.getDate()).padStart(2,"0"); }
 
@@ -823,10 +840,10 @@ function publish(scope){
   });
   const msg = lines.length ? `Programma aggiornato.\n${lines.join("\n")}\nTutti gli impegni, con chi è convocato, sono nell'app.` : `Programma aggiornato: cambiano alcune convocazioni. Controllate l'app.`;
   const lastPub = {n:affected.size, who:[...affected], msg};
-  S.busy = true; render();
-  chiama({azione:"pubblica", ambito:scope || null, messaggio:msg}).then(() => {
-    S.busy = false; S.lastPub = lastPub; S.issues = null; S.modal = "pub"; render();
-  }).catch(err => { S.busy = false; render(); toast(err.message); });
+  S.pub = scope ? clone(S.pub.filter(b => b.group !== scope).concat(S.blocks.filter(b => b.group === scope))) : clone(S.blocks.filter(b => !ME || ME.scrive.includes(b.group)).concat(S.pub.filter(b => ME && !ME.scrive.includes(b.group))));
+  lastPub.stato = "invio";
+  S.lastPub = lastPub; S.issues = null; S.modal = "pub"; render();
+  inCoda({azione:"pubblica", ambito:scope || null, messaggio:msg}).then(() => { lastPub.stato = "ok"; if(S.modal === "pub") renderModal(); }, err => { lastPub.stato = "errore"; lastPub.errore = err.message; if(S.modal === "pub") renderModal(); });
 }
 
 /* ===================== DIRETTIVO: SCENE E CAST ===================== */
@@ -850,7 +867,8 @@ function modal(){
   const p = S.lastPub;
   return `<div class="veil" data-a="close"><div class="dlg" role="dialog" aria-modal="true" aria-label="Pubblicato">
     <div class="row"><h2>Pubblicato</h2><button type="button" class="x" data-a="close" aria-label="Chiudi">${ic("x")}</button></div>
-    <div class="notice ok">${ic("check")}<div>L'app è aggiornata per tutti. ${p.n ? `Il cambio riguarda <b>${p.n} ${p.n===1?"persona":"persone"}</b>: ${esc(listIt(p.who.map(pname))).replace(/\.$/,"")}. Lo vedono evidenziato alla prossima apertura dell'app.` : "Nessuna convocazione è cambiata."}</div></div>
+    ${p.stato === "invio" ? `<div class="notice">${ic("refresh")}<div>Invio al foglio in corso… puoi già copiare il messaggio.</div></div>` : p.stato === "errore" ? `<div class="notice bad">${ic("alert")}<div>${esc(p.errore || "Pubblicazione non riuscita.")} Riprova a premere Pubblica.</div></div>` : ""}
+    <div class="notice ok">${ic("check")}<div>${p.stato === "ok" ? "Fatto: l'app è aggiornata per tutti." : "Appena il foglio conferma, l'app sarà aggiornata per tutti."} ${p.n ? `Il cambio riguarda <b>${p.n} ${p.n===1?"persona":"persone"}</b>: ${esc(listIt(p.who.map(pname))).replace(/\.$/,"")}. Lo vedono evidenziato alla prossima apertura dell'app.` : "Nessuna convocazione è cambiata."}</div></div>
     <div class="stack" style="gap:6px"><b>Messaggio pronto per la bacheca WhatsApp</b><div class="wa" id="wamsg">${esc(p.msg)}</div>
       <button type="button" class="btn sm sec" data-a="copywa" style="align-self:flex-start">${ic("copy")}Copia il messaggio</button></div>
     <p class="small muted">Le notifiche sul telefono arriveranno con la fase 2. Per ora incolla il messaggio nella bacheca, così WhatsApp resta il canale che conoscete.</p>
@@ -872,10 +890,22 @@ function render(){
   document.getElementById("app").innerHTML = header() + `<div class="shell">${side()}<main id="main">${main}</main></div>` + modal() + (S.toast ? `<div class="toast" role="status">${esc(S.toast)}</div>` : "");
   window.scrollTo(0, y);
   const dl2 = document.querySelector(".dlg"); if(dl2 && dl && dy) dl2.scrollTop = dy;
+  document.documentElement.classList.toggle("modale-aperta", !!S.modal);
 }
 function resetSubs(){ Object.keys(S.sub).forEach(g => S.sub[g] = SUBS[g][0][0]); }
 let toastT = null;
-function toast(t){ S.toast = t; render(); clearTimeout(toastT); toastT = setTimeout(() => { S.toast = null; render(); }, 3200); }
+function mostraToast(){ document.querySelectorAll(".toast").forEach(n => n.remove()); if(!S.toast) return; const n = document.createElement("div"); n.className = "toast"; n.setAttribute("role","status"); n.textContent = S.toast; document.getElementById("app").appendChild(n); }
+function toast(t){ S.toast = t; mostraToast(); clearTimeout(toastT); toastT = setTimeout(() => { S.toast = null; mostraToast(); }, 3200); }
+function renderModal(){
+  const v = document.querySelector(".veil");
+  if(!v){ render(); return; }
+  const dl = v.querySelector(".dlg"), dy = dl ? dl.scrollTop : 0;
+  const tmp = document.createElement("div"); tmp.innerHTML = modal();
+  const nv = tmp.firstElementChild;
+  if(!nv){ v.remove(); document.documentElement.classList.remove("modale-aperta"); return; }
+  v.replaceWith(nv);
+  const dl2 = nv.querySelector(".dlg"); if(dl2) dl2.scrollTop = dy;
+}
 
 document.addEventListener("click", e => {
   const el = e.target.closest("[data-a]");
@@ -893,10 +923,10 @@ document.addEventListener("click", e => {
   else if(a === "add"){ S.edit = {b:newBlock(v, S.scope), isNew:true}; S.modal = "edit"; render(); }
   else if(a === "edit"){ S.edit = {b:clone(S.blocks.find(x => x.id === v)), isNew:false}; S.modal = "edit"; render(); }
   else if(a === "dup"){ const o = clone(S.blocks.find(x => x.id === v)); o.id = "n"+Date.now().toString(36); o.date = addDays(o.date, 7); S.edit = {b:o, isNew:true}; S.modal = "edit"; render(); }
-  else if(a === "ed"){ onEd(el.dataset.k, v); render(); }
+  else if(a === "ed"){ onEd(el.dataset.k, v); renderModal(); }
   else if(a === "closeedit"){ S.edit = null; S.modal = null; render(); }
   else if(a === "saveedit"){ if(!S.busy) saveEdit(); }
-  else if(a === "deledit"){ if(S.busy) return; if(S.edit.armed){ const id = S.edit.b.id; S.busy = true; render(); chiama({azione:"elimina", id}).then(() => { S.busy = false; S.edit = null; S.modal = null; S.issues = null; toast("Eliminato in bozza: sparisce per tutti quando pubblichi."); }).catch(err => { S.busy = false; render(); toast(err.message); }); } else { S.edit.armed = true; render(); } }
+  else if(a === "deledit"){ if(S.edit.armed){ const id = S.edit.b.id; S.blocks = S.blocks.filter(x => x.id !== id); S.edit = null; S.modal = null; S.issues = null; render(); toast("Eliminato in bozza: sparisce per tutti quando pubblichi."); inCoda({azione:"elimina", id}); } else { S.edit.armed = true; renderModal(); } }
   else if(a === "refresh"){ aggiorna(true); }
   else if(a === "copywa"){ const t = S.lastPub ? S.lastPub.msg : ""; try{ navigator.clipboard.writeText(t).then(() => toast("Messaggio copiato: incollalo nella bacheca."), () => { selectWa(); toast("Testo selezionato: copialo con il menu del telefono."); }); }catch(err){ selectWa(); } }
 });
@@ -911,7 +941,7 @@ document.addEventListener("change", e => {
     if(k === "date" && t.value) b.date = t.value;
     else if((k === "start" || k === "end") && t.value) b[k] = t.value.replace(":",".");
     else if(k === "title" || k === "place") b[k] = t.value.trim();
-    render(); return; }
+    renderModal(); return; }
   const f = t.dataset.f; if(!f) return;
   const b = S.blocks.find(x => x.id === t.dataset.b); if(!b) return;
   if(f === "scene"){ const i = +t.dataset.i; if(t.value) b.scenes[i] = t.value; else b.scenes.splice(i,1); b.scenes = b.scenes.filter(Boolean); b.only = []; }
@@ -1011,12 +1041,34 @@ function chiama(body){
         const m = {permesso:"Non hai il permesso di modificare questo gruppo.", dati:"Qualche dato non va: controlla giorno e orari.", codice:"Il tuo codice non è più valido: chiedi un link nuovo al referente."}[d.errore];
         throw new Error(m || ("Errore del foglio: " + (d.dettaglio || d.errore)));
       }
-      ricevuti(d); return d;
+      if(d.me) ricevuti(d);
+      return d;
     });
 }
 
+/* le scritture partono una dopo l'altra, senza far aspettare chi usa l'app */
+let coda = Promise.resolve(), inAttesa = 0;
+function statoBarra(){ const h = document.querySelector(".sync span"); if(h) h.innerHTML = inAttesa ? "salvataggio…" : (S.syncAt ? "aggiornato alle " + new Date(S.syncAt).toTimeString().slice(0,5).replace(":", ".") : ""); }
+function inCoda(body){
+  inAttesa++; statoBarra();
+  const p = coda.then(() => chiama(body)).then(d => {
+    inAttesa--; S.syncAt = Date.now(); statoBarra();
+    if(!inAttesa) setTimeout(() => { if(!inAttesa && !S.modal) aggiorna(false); }, 1500);
+    return d;
+  }, err => {
+    inAttesa--; statoBarra();
+    toast(err.message + " Ricarico i dati dal foglio.");
+    setTimeout(() => aggiorna(false), 800);
+    throw err;
+  });
+  coda = p.catch(() => {});
+  return p;
+}
+window.addEventListener("beforeunload", e => { if(inAttesa){ e.preventDefault(); e.returnValue = ""; } });
+
 /* legge dal foglio */
 function aggiorna(manuale){
+  if(!manuale && (S.modal === "edit" || inAttesa)) return;
   if(!api()){ schermata(`<div class="notice bad">${ic("alert")}<div>Manca l'indirizzo dello script nel file config.js.</div></div>`); return; }
   if(!ME) schermata(`<p class="sub">Carico il calendario…</p>`);
   S.sync = "busy"; render();
@@ -1027,6 +1079,7 @@ function aggiorna(manuale){
         if(d.errore === "codice"){ mem(CHIAVE_K, null); mem(CHIAVE_DATI, null); ME = null; CODICE = null; chiediCodice("Codice non riconosciuto: controlla il link personale o chiedine uno nuovo al referente."); return; }
         throw new Error(d.dettaglio || d.errore);
       }
+      if(inAttesa){ S.sync = ""; statoBarra(); return; }
       ricevuti(d);
       if(manuale) toast("Aggiornato.");
     })
