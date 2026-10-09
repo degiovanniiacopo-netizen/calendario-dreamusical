@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>DreaMusical</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icona-180.png">
+<link rel="icon" href="icona-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="DreaMusical">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#242E63">
+<style>
+:root{--navy:#242E63;--sky:#5B96BF;--soft:#EDF4FA;--line:#D6E3EF;--ink:#242E63;--muted:#6E7A9C;--bg:#FFFFFF;--ok:#2D7A4C;--bad:#B33A3A}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+header{padding:calc(12px + env(safe-area-inset-top,0px)) 16px 12px;border-bottom:3px solid var(--sky);display:flex;align-items:center;justify-content:space-between;gap:12px}
+header img{height:40px;width:auto;display:block}
+main{max-width:560px;margin:0 auto;padding:16px 16px calc(32px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:16px}
+h1{font-size:1.5rem;margin:0}
+h2{font-size:1.1rem;margin:0 0 8px}
+.card{border:1.5px solid var(--line);border-radius:14px;padding:14px;background:var(--bg)}
+.soft{background:var(--soft);border-color:var(--soft)}
+.ev{display:grid;grid-template-columns:64px minmax(0,1fr);gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.ev:first-child{border-top:0}
+.ev .d{font-weight:700;text-align:center;line-height:1.1}
+.ev .d small{display:block;font-weight:400;color:var(--muted);font-size:.8rem}
+.ev .t{font-weight:600}
+.ev .m{color:var(--muted);font-size:.9rem}
+label{display:flex;flex-direction:column;gap:4px;font-weight:600;font-size:.9rem}
+input,select{font:inherit;font-size:16px;padding:9px 10px;border:1.5px solid var(--line);border-radius:9px;background:#fff;color:var(--ink);width:100%;min-width:0}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form{display:flex;flex-direction:column;gap:10px}
+button{font:inherit;font-weight:700;border:0;border-radius:10px;padding:11px 14px;background:var(--navy);color:#fff;cursor:pointer}
+button.line{background:none;color:var(--navy);border:1.5px solid var(--line)}
+button:disabled{opacity:.5}
+.msg{padding:10px 12px;border-radius:10px;font-size:.95rem}
+.msg.ok{background:#E6F3EB;color:var(--ok)}
+.msg.bad{background:#F8E7E7;color:var(--bad)}
+.diag{font-size:.88rem}
+.diag dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:0}
+.diag dt{color:var(--muted)}
+.diag dd{margin:0;font-weight:600}
+.small{font-size:.85rem;color:var(--muted)}
+</style>
+</head>
+<body>
+<header><img src="logo.png" alt="DreaMusical Teatro"><span class="small">prova tecnica</span></header>
+<main id="app"><p class="small">Caricamento…</p></main>
+<script src="config.js"></script>
+<script>
+(function(){
+  var app = document.getElementById("app");
+  var GG = ["dom","lun","mar","mer","gio","ven","sab"], MM = ["gen","feb","mar","apr","mag","giu","lug","ago","set","ott","nov","dic"];
+  var NOMI_GRUPPI = {compagnia:"Compagnia", direttivo:"Direttivo", segreti:"Segreti di famiglia", sartoria:"Sartoria e trucco"};
+  var st = {k:null, fonte:"", me:null, impegni:[], msg:null, tLettura:null, tSalva:null, busy:false};
+
+  function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]; }); }
+  function mem(k, v){ try{ if(v === undefined) return localStorage.getItem(k); if(v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); }catch(e){ return null; } }
+  function standalone(){ return (window.navigator.standalone === true) || (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches); }
+  function api(){ return (typeof INDIRIZZO_SCRIPT === "string" && /^https:\/\/script\.google\.com\//.test(INDIRIZZO_SCRIPT)) ? INDIRIZZO_SCRIPT : null; }
+  function oggiISO(n){ var d = new Date(); d.setDate(d.getDate() + (n||0)); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+
+  // 1. da dove arriva il codice
+  var q = new URLSearchParams(location.search).get("k");
+  if(q){ st.k = q.trim(); st.fonte = "dal link"; mem("dm-k", st.k); }
+  else if(mem("dm-k")){ st.k = mem("dm-k"); st.fonte = "ricordato dall'app"; }
+
+  function diag(){
+    return '<section class="card soft diag"><h2>Prova tecnica</h2><dl>'
+      + '<dt>Aperta come</dt><dd>' + (standalone() ? "app dalla schermata Home" : "pagina nel browser") + '</dd>'
+      + '<dt>Codice</dt><dd>' + (st.k ? esc(st.fonte) : "nessuno") + '</dd>'
+      + '<dt>Lettura dal foglio</dt><dd>' + (st.tLettura != null ? (st.tLettura/1000).toFixed(1) + " s" : "–") + '</dd>'
+      + '<dt>Ultimo salvataggio</dt><dd>' + (st.tSalva != null ? (st.tSalva/1000).toFixed(1) + " s" : "–") + '</dd>'
+      + '</dl></section>';
+  }
+
+  function vistaCodice(errore){
+    app.innerHTML = (errore ? '<div class="msg bad">' + esc(errore) + '</div>' : '')
+      + '<section class="card form"><h1>Chi sei?</h1><p class="small">Di solito si entra dal proprio link personale. Se l\'app non ti riconosce, incolla qui il tuo codice (lo trovi nel foglio, colonna «codice»).</p>'
+      + '<label>Codice<input id="cod" autocomplete="off" autocapitalize="off" spellcheck="false"></label>'
+      + '<button type="button" id="entra">Entra</button></section>' + diag();
+    document.getElementById("entra").onclick = function(){ var v = document.getElementById("cod").value.trim(); if(!v) return; st.k = v; st.fonte = "inserito a mano"; mem("dm-k", v); carica(); };
+  }
+
+  function fmtData(iso){ var p = iso.split("-"); var d = new Date(+p[0], +p[1]-1, +p[2]); return '<div class="d">' + GG[d.getDay()] + '<br>' + d.getDate() + '<small>' + MM[d.getMonth()] + '</small></div>'; }
+
+  function vistaPrincipale(){
+    var me = st.me, can = me.puoScrivere || [];
+    var lista = st.impegni.length ? st.impegni.map(function(e){
+      return '<div class="ev">' + fmtData(e.data) + '<div><div class="t">' + esc(e.titolo) + '</div><div class="m">' + esc(e.inizio) + '–' + esc(e.fine) + ' · ' + esc(e.luogo) + ' · ' + esc(NOMI_GRUPPI[e.gruppo] || e.gruppo) + '</div></div></div>';
+    }).join("") : '<p class="small">Nessun impegno in arrivo per te.</p>';
+    var form = can.length ? '<section class="card form"><h2>Aggiungi un impegno di prova</h2>'
+      + '<label>Titolo<input id="f-titolo" placeholder="per esempio: Prova di prova"></label>'
+      + '<div class="row"><label>Giorno<input id="f-data" type="date" value="' + oggiISO(2) + '"></label><label>Luogo<select id="f-luogo"><option>Teatro</option><option>Sede</option><option>Camerini</option></select></label></div>'
+      + '<div class="row"><label>Inizio<input id="f-inizio" type="time" value="20:45"></label><label>Fine<input id="f-fine" type="time" value="23:30"></label></div>'
+      + '<label>Gruppo<select id="f-gruppo">' + can.map(function(g){ return '<option value="' + g + '">' + esc(NOMI_GRUPPI[g] || g) + '</option>'; }).join("") + '</select></label>'
+      + '<button type="button" id="salva"' + (st.busy ? " disabled" : "") + '>' + (st.busy ? "Salvo…" : "Salva nel foglio") + '</button></section>' : '';
+    app.innerHTML = (st.msg ? '<div class="msg ' + st.msg[0] + '">' + esc(st.msg[1]) + '</div>' : '')
+      + '<div><h1>Ciao ' + esc(me.nome) + '</h1><p class="small">Gruppi: ' + esc(me.gruppi.map(function(g){ return NOMI_GRUPPI[g] || g; }).join(", ")) + '</p></div>'
+      + '<section class="card"><h2>I tuoi prossimi impegni</h2>' + lista + '</section>'
+      + form + diag()
+      + '<div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="line" id="ricarica">Ricarica dal foglio</button><button type="button" class="line" id="esci">Esci (per provare un altro codice)</button></div>';
+    var s = document.getElementById("salva"); if(s) s.onclick = salva;
+    document.getElementById("ricarica").onclick = function(){ st.msg = null; carica(); };
+    document.getElementById("esci").onclick = function(){ mem("dm-k", null); st.k = null; st.me = null; st.fonte = ""; vistaCodice(); };
+  }
+
+  function carica(){
+    if(!api()){ app.innerHTML = '<div class="msg bad">Manca l\'indirizzo dello script nel file config.js (vedi la guida, passo «Collega il sito al foglio»).</div>' + diag(); return; }
+    if(!st.k){ vistaCodice(); return; }
+    var t0 = Date.now();
+    fetch(api() + "?k=" + encodeURIComponent(st.k), {redirect:"follow"})
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        st.tLettura = Date.now() - t0;
+        if(!d.ok){ if(d.errore === "codice"){ mem("dm-k", null); st.k = null; vistaCodice("Codice non riconosciuto: controlla il link o il codice nel foglio."); } else { app.innerHTML = '<div class="msg bad">Errore dello script: ' + esc(d.dettaglio || d.errore) + '</div>' + diag(); } return; }
+        st.me = d.me; st.impegni = d.impegni || []; vistaPrincipale();
+      })
+      .catch(function(){ app.innerHTML = '<div class="msg bad">Non riesco a contattare il foglio. Controlla la connessione e l\'indirizzo in config.js.</div>' + diag(); });
+  }
+
+  function salva(){
+    var v = function(id){ return document.getElementById(id).value.trim(); };
+    var dati = {k: st.k, titolo: v("f-titolo"), data: v("f-data"), inizio: v("f-inizio").replace(":", "."), fine: v("f-fine").replace(":", "."), luogo: v("f-luogo"), gruppo: v("f-gruppo")};
+    if(!dati.titolo){ st.msg = ["bad", "Scrivi un titolo."]; vistaPrincipale(); return; }
+    st.busy = true; st.msg = null; vistaPrincipale();
+    var t0 = Date.now();
+    fetch(api(), {method:"POST", body: JSON.stringify(dati), redirect:"follow"})
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        st.busy = false; st.tSalva = Date.now() - t0;
+        if(d.ok){ st.impegni = d.impegni || st.impegni; st.msg = ["ok", "Salvato nel foglio. Aprilo dal computer: trovi la riga nuova nella scheda Impegni."]; }
+        else st.msg = ["bad", d.errore === "permesso" ? "Non puoi aggiungere impegni per questo gruppo." : "Non salvato: " + (d.dettaglio || d.errore)];
+        vistaPrincipale();
+      })
+      .catch(function(){ st.busy = false; st.msg = ["bad", "Non riesco a contattare il foglio."]; vistaPrincipale(); });
+  }
+
+  carica();
+})();
+</script>
+</body>
+</html>
