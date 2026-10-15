@@ -20,7 +20,7 @@
 :root{
   --bg:#FFFFFF; --surface:#FFFFFF; --soft:#EDF4FA; --ink:#242E63; --ink2:#46517F; --muted:#6E7A9C; --line:#D6E3EF;
   --brand:#242E63; --brand2:#3A5A93; --on-brand:#FFFFFF; --sky:#5B96BF; --sky-ink:#3A76A3; --sky-soft:#DCEBF6; --light:#A8CFEA;
-  --g-compagnia:#242E63; --g-direttivo:#6E7A9C; --g-segreti:#3A76A3; --g-sartoria:#5B96BF;
+  --g-compagnia:#242E63; --g-direttivo:#6E7A9C; --g-segreti:#3A76A3; --g-sartoria:#5B96BF; --g-scenografia:#2F8A88;
   --red:#B33A3A; --green:#2D7A4C; --orange:#B8620F;
   --f-display:'Barlow Condensed','Arial Narrow',Arial,sans-serif;
   --f-body:'Barlow','Segoe UI',Arial,sans-serif;
@@ -30,14 +30,14 @@
   :root:not([data-theme="light"]){
     --bg:#0E1430; --surface:#161E44; --soft:#1E2855; --ink:#EEF3FA; --ink2:#C8D3E8; --muted:#96A3C3; --line:#2B3668;
     --brand:#242E63; --brand2:#3A5A93; --on-brand:#FFFFFF; --sky:#7FB3DA; --sky-ink:#9CC6E6; --sky-soft:#22325F; --light:#A8CFEA;
-    --g-compagnia:#9AA6E0; --g-direttivo:#A3AEC6; --g-segreti:#7FB3DA; --g-sartoria:#A9D0EC;
+    --g-compagnia:#9AA6E0; --g-direttivo:#A3AEC6; --g-segreti:#7FB3DA; --g-sartoria:#A9D0EC; --g-scenografia:#7CC9C4;
     --red:#EE8A84; --green:#7FD0A0; --orange:#EFA55A; color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
   --bg:#0E1430; --surface:#161E44; --soft:#1E2855; --ink:#EEF3FA; --ink2:#C8D3E8; --muted:#96A3C3; --line:#2B3668;
   --brand:#242E63; --brand2:#3A5A93; --on-brand:#FFFFFF; --sky:#7FB3DA; --sky-ink:#9CC6E6; --sky-soft:#22325F; --light:#A8CFEA;
-  --g-compagnia:#9AA6E0; --g-direttivo:#A3AEC6; --g-segreti:#7FB3DA; --g-sartoria:#A9D0EC;
+  --g-compagnia:#9AA6E0; --g-direttivo:#A3AEC6; --g-segreti:#7FB3DA; --g-sartoria:#A9D0EC; --g-scenografia:#7CC9C4;
   --red:#EE8A84; --green:#7FD0A0; --orange:#EFA55A; color-scheme:dark;
 }
 *{box-sizing:border-box}
@@ -118,7 +118,7 @@ input[type=text],select{width:100%;border:1.5px solid var(--line);background:var
 .b-orange{background:color-mix(in srgb,var(--orange) 15%,var(--surface));color:var(--orange)}
 .b-sky{background:var(--sky-soft);color:var(--sky-ink)}
 .b-grey{background:var(--soft);color:var(--ink2)}
-.g-compagnia{--c:var(--g-compagnia)} .g-direttivo{--c:var(--g-direttivo)} .g-segreti{--c:var(--g-segreti)} .g-sartoria{--c:var(--g-sartoria)}
+.g-compagnia{--c:var(--g-compagnia)} .g-direttivo{--c:var(--g-direttivo)} .g-segreti{--c:var(--g-segreti)} .g-sartoria{--c:var(--g-sartoria)} .g-scenografia{--c:var(--g-scenografia)}
 .gtag{display:inline-flex;align-items:center;gap:6px;font-size:.78rem;font-weight:700;color:var(--c)}
 .gtag::before{content:"";width:9px;height:9px;border-radius:3px;background:var(--c)}
 
@@ -291,8 +291,12 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-wi
 .sync .bad{color:var(--red);font-weight:600}
 .boot{max-width:520px;margin:40px auto;padding:0 16px;display:flex;flex-direction:column;gap:16px}
 .boot img{height:52px;align-self:flex-start}
+.boot .btn{justify-content:center}
+.boot select{font:inherit;font-size:16px;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;width:100%;background:var(--surface);color:var(--ink)}
 .boot input{font:inherit;font-size:16px;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;width:100%;background:var(--surface);color:var(--ink)}
 a.mat{text-decoration:none}
+.dlg a.btn{text-decoration:none;justify-content:center}
+.mats button.mat{cursor:pointer}
 .dlg{overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 .dlg.wide{padding-top:0;padding-bottom:0}
 .dlg .hd{position:sticky;top:0;margin:0 -20px;padding:16px 20px 12px;background:var(--surface);z-index:2;border-bottom:1px solid var(--line)}
@@ -300,7 +304,7 @@ a.mat{text-decoration:none}
 html.modale-aperta,html.modale-aperta body{overflow:hidden}
 .c{min-height:38px}
 @media (max-width:700px){
-  .veil{padding:0;place-items:stretch}
+  .veil.full{padding:0;place-items:stretch}
   .veil > .dlg.wide{max-width:none;max-height:none;height:100%;border-radius:0;padding:0 16px}
   .dlg.wide .hd{margin:0 -16px;padding:calc(12px + env(safe-area-inset-top,0px)) 16px 12px}
   .dlg.wide .ft{margin:0 -16px;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px))}
@@ -329,19 +333,21 @@ let PLACE_ADDR = {};
 let DEF_START = "20.45", DEF_END = "23.30";
 const LINK = location.origin + location.pathname;
 
-const GROUPS = {compagnia:"Compagnia", direttivo:"Direttivo", segreti:"Segreti di famiglia", sartoria:"Sartoria e trucco"};
-const GROUP_ORDER = ["compagnia","direttivo","segreti","sartoria"];
+const GROUPS = {compagnia:"Compagnia", direttivo:"Direttivo", segreti:"Segreti di famiglia", sartoria:"Sartoria e trucco", scenografia:"Scenografia"};
+const GROUP_ORDER = ["compagnia","direttivo","segreti","sartoria","scenografia"];
 const GROUP_DESC = {
   compagnia:"Prove, filati, spettacoli ed eventi di tutta la compagnia.",
   direttivo:"Riunioni, piano prove e organizzazione. Qui si scrive il programma.",
   segreti:"Le cene con delitto che finanziano la compagnia.",
-  sartoria:"Laboratori di costumi e trucco, prove costume con gli attori."
+  sartoria:"Laboratori di costumi e trucco, prove costume con gli attori.",
+  scenografia:"Laboratori per costruire le scene e montaggi in teatro."
 };
 const NOPE = {
   compagnia:["Sipario chiuso!", "Questo palco è riservato a chi fa parte della compagnia. Non sono affari tuoi… almeno finché non fai un provino."],
   direttivo:["Riunione a porte chiuse", "Qui il direttivo decide le sorti della compagnia. Non sono affari tuoi: fidati, ti perdi solo tabelle e verbali."],
   segreti:["Un segreto è un segreto", "Ciò che succede in Segreti di famiglia resta in famiglia. E tu, in questa famiglia, non ci sei. Non sono affari tuoi!"],
-  sartoria:["Ago, filo e riservatezza", "Il laboratorio di sartoria e trucco è aperto solo a chi ne fa parte. Non sono affari tuoi: al massimo ti chiamano per la prova costume."]
+  sartoria:["Ago, filo e riservatezza", "Il laboratorio di sartoria e trucco è aperto solo a chi ne fa parte. Non sono affari tuoi: al massimo ti chiamano per la prova costume."],
+  scenografia:["Lavori in corso, vietato l'ingresso", "Qui si costruisce il castello di Frankenstein, pezzo dopo pezzo. Non sono affari tuoi: lo vedrai finito in scena, ed è meglio così."]
 };
 let CHARS = [];
 let P = {};
@@ -350,14 +356,14 @@ let ME = null;
 let CONDUCTORS = [];
 const ACT = {I:"Atto primo", II:"Atto secondo"};
 
-const TYPE = {spettacolo:"Spettacolo", coreografia:"Coreografia", scena:"Scena", canto:"Canto", insieme:"Prova con tutti e tre", filato:"Filato", evento:"Evento", cena:"Cena con delitto", costume:"Prova costume", laboratorio:"Laboratorio", riunione:"Riunione"};
-const BRING = {spettacolo:"Tutto, e il buonumore: si va in scena", coreografia:"Scarpe da ballo e acqua", scena:"Copione e matita", canto:"Spartito", insieme:"Copione, spartito, scarpe da ballo", filato:"Copione e scarpe da ballo", costume:"Niente, il costume è in camerino", evento:"", cena:"Il tuo costume da cena", laboratorio:"Forbici e metro", riunione:""};
+const TYPE = {labscenografia:"Laboratorio di scenografia", montaggio:"Montaggio", spettacolo:"Spettacolo", coreografia:"Coreografia", scena:"Scena", canto:"Canto", insieme:"Prova con tutti e tre", filato:"Filato", evento:"Evento", cena:"Cena con delitto", costume:"Prova costume", laboratorio:"Laboratorio", riunione:"Riunione"};
+const BRING = {labscenografia:"", montaggio:"Abiti da lavoro", spettacolo:"Tutto, e il buonumore: si va in scena", coreografia:"Scarpe da ballo e acqua", scena:"Copione e matita", canto:"Spartito", insieme:"Copione, spartito, scarpe da ballo", filato:"Copione e scarpe da ballo", costume:"Niente, il costume è in camerino", evento:"", cena:"Il tuo costume da cena", laboratorio:"Forbici e metro", riunione:""};
 
 const clone = o => JSON.parse(JSON.stringify(o));
 
 function initState(){
   return {
-    role:null, view:{}, sub:{compagnia:"cal", direttivo:"cal", segreti:"cal", sartoria:"cal"},
+    role:null, view:{}, sub:{compagnia:"cal", direttivo:"cal", segreti:"cal", sartoria:"cal", scenografia:"cal"},
     blocks:[], scenes:{}, pub:[], pubScenes:{},
     changed:{}, removed:{}, month:TODAY.slice(0,7), edit:null,
     issues:null, lastPub:null, calMine:true, busy:false,
@@ -449,12 +455,16 @@ const I = {
   lock:'<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
   refresh:'<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/>',
   help:'<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5v.7M12 17h.01"/>',
-  x:'<path d="M6 6l12 12M18 6 6 18"/>'
+  x:'<path d="M6 6l12 12M18 6 6 18"/>',
+  cal:'<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4M12 13v4M10 15h4"/>',
+  user:'<circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/>'
 };
 const ic = n => `<svg class="svg" viewBox="0 0 24 24" aria-hidden="true">${I[n]}</svg>`;
 const CASTLE = `<svg class="castle" viewBox="0 0 120 60" aria-hidden="true"><path d="M0 60 Q30 40 60 42 T120 60 Z" fill="rgba(255,255,255,.14)"/><g fill="#A8CFEA"><rect x="44" y="24" width="32" height="20"/><rect x="38" y="14" width="10" height="30"/><rect x="72" y="14" width="10" height="30"/><rect x="38" y="10" width="3" height="5"/><rect x="42.5" y="10" width="3" height="5"/><rect x="45" y="10" width="3" height="5"/><rect x="72" y="10" width="3" height="5"/><rect x="76.5" y="10" width="3" height="5"/><rect x="79" y="10" width="3" height="5"/><rect x="56" y="18" width="8" height="8"/><path d="M60 8 L64 18 L56 18 Z"/></g><rect x="58" y="30" width="4" height="5" fill="#242E63"/><path d="M100 2 L92 18 L98 18 L90 34 L106 13 L99 13 L105 2 Z" fill="#FFFFFF"/></svg>`;
 
 /* ===================== STRUTTURA ===================== */
+const GRUPPI_AUTONOMI = ["sartoria","scenografia"];
+function tuttoIlProgramma(){ return !!ME && GROUP_ORDER.every(g => ME.scrive.includes(g)); }
 function conduco(pid){ return S.pub.some(b => b.cond.includes(pid)); }
 function navItems(pid){
   const items = [];
@@ -465,8 +475,9 @@ function navItems(pid){
   return items;
 }
 function navCount(pid, key){
-  if(key === "g:direttivo" && ME && ME.scrive.length === 4){ const d = dirtyRows(null); return {n:d, warn:true}; }
-  if(key === "g:sartoria" && ME && ME.scrive.length === 1 && ME.scrive[0] === "sartoria"){ const d = dirtyRows("sartoria"); return {n:d, warn:true}; }
+  if(key === "g:direttivo" && ME && tuttoIlProgramma()){ const d = dirtyRows(null); return {n:d, warn:true}; }
+  const gk = key.startsWith("g:") ? key.slice(2) : "";
+  if(GRUPPI_AUTONOMI.includes(gk) && ME && !tuttoIlProgramma() && ME.scrive.includes(gk)){ const d = dirtyRows(gk); return {n:d, warn:true}; }
   return {n:0};
 }
 function header(){
@@ -475,7 +486,7 @@ function header(){
   const stato = inAttesa ? "salvataggio…" : S.sync === "busy" ? "aggiorno…" : S.offline ? `<span class="bad">non aggiornato</span>${ora?" · dati delle "+ora:""}` : (ora ? "aggiornato alle "+ora : "");
   return `<header class="top">
     <img class="logo" src="${LOGO}" alt="DreaMusical Teatro">
-    <div class="sync"><span>${stato}</span><button type="button" data-a="refresh" aria-label="Aggiorna adesso">${ic("refresh")}</button></div>
+    <div class="sync"><span>${stato}</span><button type="button" data-a="refresh" aria-label="Aggiorna adesso">${ic("refresh")}</button><button type="button" data-a="account" aria-label="Il mio accesso">${ic("user")}</button></div>
   </header>`;
 }
 function whoLine(){
@@ -523,7 +534,7 @@ function groupCards(pid){
   return `<section class="stack" style="gap:8px">
     <div class="groups">${mine.map(g => { const nx = S.pub.filter(b => b.group === g && b.date >= TODAY).sort(byTime)[0];
       return `<button type="button" class="gcard g-${g}" data-a="view" data-v="g:${g}"><span class="gn">${GROUPS[g]}</span><span class="gx">${nx ? esc(cap(fmtDay(nx.date))+": "+titleOf(nx, sc)) : "Nessun impegno in arrivo"}</span></button>`; }).join("")}${GROUP_ORDER.filter(g => !mine.includes(g)).map(outCard).join("")}</div>
-    ${mine.length < 4 ? `<div class="lockline">${ic("lock")}<span>Gli altri gruppi li vedi, ma dentro entra solo chi ne fa parte.</span></div>` : ""}
+    ${mine.length < GROUP_ORDER.length ? `<div class="lockline">${ic("lock")}<span>Gli altri gruppi li vedi, ma dentro entra solo chi ne fa parte.</span></div>` : ""}
   </section>`;
 }
 function vHome(){
@@ -548,6 +559,7 @@ function vHome(){
         ${BRING[next.type]?`<dt>Porta</dt><dd>${esc(BRING[next.type])}</dd>`:""}
       </dl>
       ${sameDay.map(mats).join("")}
+      <div class="mats">${sameDay.filter(b => convOf(b, sc).includes(pid) || b.cond.includes(pid)).map(b => `<button type="button" class="mat" data-a="cal" data-v="${b.id}">${ic("cal")}${sameDay.length > 1 ? "Calendario: "+esc(TYPE[b.type]) : "Aggiungi al calendario"}</button>`).join("")}</div>
     </div></article>`;
   }
   const dates = [...new Set(future.map(b => b.date))].filter(d => !next || d !== next.date);
@@ -579,6 +591,7 @@ function evRow(b, pid, mineOnly){
     <div class="mt"><span class="gtag">${GROUPS[b.group]}</span>${role?`<span>tu: ${esc(role)}</span>`:""}${condText(b)?`<span>con ${esc(condText(b))}</span>`:""}<span>${b.place?esc(b.place):"luogo da definire"}</span>${!mineOnly&&me?`<span class="badge b-sky">ci sei</span>`:""}${chg?`<span class="badge b-orange">Cambiato: prima era ${esc(chg)}</span>`:""}${S.nuovi && S.nuovi[b.id]?`<span class="badge b-sky">Nuovo</span>`:""}</div>
     ${segCast?`<div class="mt"><span>Cast della serata: ${esc(segCast.join(", "))}</span></div>`:""}
     ${b.type==="costume"||b.type==="laboratorio"?`<div class="mt"><span>Convocati: ${esc(cv.map(pname).join(", "))}</span></div>`:""}
+    ${me && b.date >= TODAY ? `<div class="mats"><button type="button" class="mat" data-a="cal" data-v="${b.id}">${ic("cal")}Aggiungi al calendario</button></div>` : ""}
   </div></div>`;
 }
 
@@ -587,7 +600,8 @@ const SUBS = {
   compagnia:[["cal","Calendario"],["scene","Le mie scene"],["membri","Chi c'è"]],
   direttivo:[["cal","Riunioni"],["foglio","Programma"],["mappa","Scene e cast"],["membri","Chi c'è"]],
   segreti:[["cal","Cene"],["membri","Chi c'è"]],
-  sartoria:[["cal","Impegni"],["foglio","Gestisci impegni"],["membri","Chi c'è"]]
+  sartoria:[["cal","Impegni"],["foglio","Gestisci impegni"],["membri","Chi c'è"]],
+  scenografia:[["cal","Impegni"],["foglio","Gestisci impegni"],["membri","Chi c'è"]]
 };
 function vGroup(g){
   const pid = S.role;
@@ -595,7 +609,7 @@ function vGroup(g){
   const members = Object.keys(P).filter(id => memberOf(id, g));
   let subs = SUBS[g];
   if(g === "compagnia" && !(P[pid] && P[pid].ch.length)) subs = subs.filter(s => s[0] !== "scene");
-  const puoGestire = g === "direttivo" ? ME.scrive.length === 4 : ME.scrive.includes(g);
+  const puoGestire = g === "direttivo" ? tuttoIlProgramma() : (GRUPPI_AUTONOMI.includes(g) && ME.scrive.includes(g));
   if(!puoGestire) subs = subs.filter(s => s[0] !== "foglio");
   if(!subs.some(s => s[0] === S.sub[g])) S.sub[g] = "cal";
   const sub = S.sub[g];
@@ -671,7 +685,8 @@ const TYPES_BY_GROUP = {
   compagnia:["coreografia","scena","canto","insieme","filato","spettacolo","evento"],
   direttivo:["riunione"],
   segreti:["cena"],
-  sartoria:["laboratorio","costume"]
+  sartoria:["laboratorio","costume"],
+  scenografia:["labscenografia","montaggio"]
 };
 const CONV_LABEL = {auto:"Dalle scene", cast:"Tutto il cast", group:"Tutto il gruppo", chars:"Alcuni personaggi", manual:"Persone scelte"};
 function defaultConv(type, group){
@@ -700,7 +715,7 @@ function vFoglio(scope){
   const d = dirtyRows(scope);
   const pend = pendingChanges(scope);
   const flagged = new Set((S.issues||[]).flatMap(x => x.rows||[]));
-  return `<p class="sub">${scope ? `Qui chi fa parte di ${GROUPS[scope]} aggiunge e modifica gli impegni del gruppo, senza passare dal direttivo. Puoi convocare tutto il gruppo, alcune persone o chi interpreta certi personaggi (per esempio per una prova costume). Il direttivo li vede comunque nel programma generale. Le modifiche restano in bozza finché non premi Pubblica.` : `Qui il direttivo scrive il programma. Aggiungi un impegno, scegli le scene o chi convocare, e l'app calcola da sola chi deve venire. Le modifiche restano in bozza finché non premi Pubblica.`}</p>
+  return `<p class="sub">${scope ? `Qui chi fa parte di ${GROUPS[scope]} aggiunge e modifica gli impegni del gruppo, senza passare dal direttivo. Puoi convocare tutto il gruppo${scope === "sartoria" ? ", alcune persone o chi interpreta certi personaggi (per esempio per una prova costume)" : " o solo alcune persone"}. Il direttivo li vede comunque nel programma generale. Le modifiche restano in bozza finché non premi Pubblica.` : `Qui il direttivo scrive il programma. Aggiungi un impegno, scegli le scene o chi convocare, e l'app calcola da sola chi deve venire. Le modifiche restano in bozza finché non premi Pubblica.`}</p>
     <div class="toolbar">
       <div class="row monthnav"><button type="button" class="btn sm line" data-a="month" data-v="-1" ${i<=0?"disabled":""} aria-label="Mese precedente">‹</button><b class="mlabel">${monthLabel(m)}</b><button type="button" class="btn sm line" data-a="month" data-v="1" ${i>=MONTHS.length-1?"disabled":""} aria-label="Mese successivo">›</button></div>
       <div class="row"><button type="button" class="btn" data-a="add" data-v="">+ Aggiungi impegno</button></div>
@@ -732,14 +747,14 @@ function editorHTML(){
   const e = S.edit, b = e.b, sc = S.scenes;
   const types = TYPES_BY_GROUP[b.group];
   const convKind = b.conv.startsWith("group:") ? "group" : b.conv;
-  const convOpts = {compagnia:["auto","cast","group","chars","manual"], sartoria:["group","chars","manual"], direttivo:["group","manual"], segreti:["group","manual"]}[b.group];
+  const convOpts = {compagnia:["auto","cast","group","chars","manual"], sartoria:["group","chars","manual"], scenografia:["group","manual"], direttivo:["group","manual"], segreti:["group","manual"]}[b.group];
   const cv = convOf(b, sc);
   const pool = Object.keys(P).filter(id => b.group === "compagnia" ? !(ME && ME.referente && id === ME.id) : memberOf(id, b.group));
   const chip = (k, v, on, label) => `<button type="button" class="c" data-a="ed" data-k="${k}" data-v="${esc(v)}" aria-pressed="${on}">${esc(label)}</button>`;
   const sceneChars = []; b.scenes.forEach(s => sc[s] && sc[s].on.forEach(c => { if(c !== "Ensemble" && !sceneChars.includes(c)) sceneChars.push(c); }));
   const conflicts = S.blocks.filter(x => x.id !== b.id && x.date === b.date && mins(x.start) < mins(b.end) && mins(b.start) < mins(x.end))
     .map(x => ({x, who: convOf(x, sc).filter(id => cv.includes(id))})).filter(o => o.who.length);
-  return `<div class="veil" data-a="closeedit"><div class="dlg wide" role="dialog" aria-modal="true" aria-label="${e.isNew?"Nuovo impegno":"Modifica impegno"}">
+  return `<div class="veil full" data-a="closeedit"><div class="dlg wide" role="dialog" aria-modal="true" aria-label="${e.isNew?"Nuovo impegno":"Modifica impegno"}">
     <div class="row hd"><h2>${e.isNew?"Nuovo impegno":"Modifica impegno"}</h2><button type="button" class="x" data-a="closeedit" aria-label="Chiudi">${ic("x")}</button></div>
     <div class="form">
       <div class="fr3">
@@ -755,7 +770,7 @@ function editorHTML(){
       ${convKind === "chars" ? `<div class="fl">Personaggi<div class="chips">${CHARS.map(c => chip("chars", c, b.chars.includes(c), c)).join("")}</div></div>` : ""}
       ${convKind === "manual" || convKind === "chars" ? `<div class="fl">${convKind==="chars"?"In più, queste persone":"Persone"}<div class="chips scroll">${pool.map(id => chip("people", id, b.people.includes(id), P[id].n)).join("")}</div></div>` : ""}
       ${["coreografia","scena","canto","insieme"].includes(b.type) ? `<div class="fl">Chi conduce<div class="chips">${CONDUCTORS.map(id => chip("cond", id, b.cond.includes(id), P[id].n+" ("+P[id].cond+")")).join("")}</div></div>` : ""}
-      ${convKind !== "auto" ? `<label class="fl">Titolo<input type="text" id="ed-title" data-e="title" value="${esc(b.title)}" placeholder="per esempio: ${({compagnia:"Filato secondo atto", sartoria:"Prova costumi del primo atto", direttivo:"Riunione di ottobre", segreti:"Cena da Elia"})[b.group]}"></label>` : ""}
+      ${convKind !== "auto" ? `<label class="fl">Titolo<input type="text" id="ed-title" data-e="title" value="${esc(b.title)}" placeholder="per esempio: ${({compagnia:"Filato secondo atto", scenografia:"Montaggio del castello", sartoria:"Prova costumi del primo atto", direttivo:"Riunione di ottobre", segreti:"Cena da Elia"})[b.group]}"></label>` : ""}
       <div class="fl">Luogo<div class="chips">${PLACES.map(pl => chip("place", pl, b.place === pl, pl)).join("")}${chip("place", "__altro", !!b.place && !PLACES.includes(b.place), "Altro…")}</div>
         ${(!!b.place && !PLACES.includes(b.place)) || S.edit.otherPlace ? `<input type="text" id="ed-place" data-e="place" value="${esc(PLACES.includes(b.place) ? "" : b.place)}" placeholder="Scrivi il luogo">` : ""}</div>
     </div>
@@ -861,7 +876,43 @@ function vMappa(){
 }
 
 /* ===================== GUIDA E FINESTRE ===================== */
+function calLinks(b){
+  const sc = S.pubScenes, titolo = TYPE[b.type] + ": " + titleOf(b, sc);
+  const luogo = [b.place, PLACE_ADDR[b.place]].filter(Boolean).join(", ");
+  const fine = b.end > b.start ? b.end : "23.59";
+  const ics = api() + "?" + new URLSearchParams({azione:"ics", id:b.id, titolo:"DreaMusical · " + titolo, data:b.date, inizio:b.start, fine:fine, luogo:luogo}).toString();
+  const g = (d, h) => d.replace(/-/g, "") + "T" + h.replace(".", "") + "00";
+  const gcal = "https://calendar.google.com/calendar/render?" + new URLSearchParams({action:"TEMPLATE", text:"DreaMusical · " + titolo, dates:g(b.date, b.start) + "/" + g(b.date, fine), ctz:"Europe/Rome", location:luogo, details:"Se cambia qualcosa lo trovi nell'app DreaMusical."}).toString();
+  return {ics, gcal, titolo};
+}
+function calModal(){
+  const b = S.pub.find(x => x.id === S.calId);
+  if(!b) return "";
+  const l = calLinks(b);
+  return `<div class="veil" data-a="close"><div class="dlg" role="dialog" aria-modal="true" aria-label="Aggiungi al calendario">
+    <div class="row"><h2>Aggiungi al calendario</h2><button type="button" class="x" data-a="close" aria-label="Chiudi">${ic("x")}</button></div>
+    <p><b>${esc(l.titolo)}</b><br><span class="muted">${esc(cap(fmtDay(b.date)))}, ${b.start}–${b.end}${b.place ? " · " + esc(b.place) : ""}</span></p>
+    <a class="btn" href="${esc(l.ics)}" target="_blank" rel="noopener">${ic("cal")}Calendario di iPhone (o Outlook)</a>
+    <a class="btn sec" href="${esc(l.gcal)}" target="_blank" rel="noopener">${ic("cal")}Google Calendar (Android)</a>
+    <p class="small muted">È una copia: se l'impegno cambia, nel calendario del telefono resta quello vecchio. Il programma giusto è sempre qui nell'app.</p>
+  </div></div>`;
+}
+function accountModal(){
+  return `<div class="veil" data-a="close"><div class="dlg" role="dialog" aria-modal="true" aria-label="Il mio accesso">
+    <div class="row"><h2>${esc(ME.nome)}</h2><button type="button" class="x" data-a="close" aria-label="Chiudi">${ic("x")}</button></div>
+    <div class="form">
+      <b>Cambia il PIN</b>
+      <label class="fl">PIN attuale<input type="password" inputmode="numeric" autocomplete="current-password" id="pin-v" maxlength="6"></label>
+      <label class="fl">Nuovo PIN (da 4 a 6 cifre)<input type="password" inputmode="numeric" autocomplete="new-password" id="pin-n" maxlength="6"></label>
+      <button type="button" class="btn" data-a="savepin">Cambia PIN</button>
+    </div>
+    <hr style="border:0;border-top:1px solid var(--line);width:100%">
+    <button type="button" class="btn line" data-a="esci">Esci da questo telefono</button>
+  </div></div>`;
+}
 function modal(){
+  if(S.modal === "cal") return calModal();
+  if(S.modal === "account") return accountModal();
   if(S.modal === "edit" && S.edit) return editorHTML();
   if(S.modal !== "pub" || !S.lastPub) return "";
   const p = S.lastPub;
@@ -928,6 +979,15 @@ document.addEventListener("click", e => {
   else if(a === "saveedit"){ if(!S.busy) saveEdit(); }
   else if(a === "deledit"){ if(S.edit.armed){ const id = S.edit.b.id; S.blocks = S.blocks.filter(x => x.id !== id); S.edit = null; S.modal = null; S.issues = null; render(); toast("Eliminato in bozza: sparisce per tutti quando pubblichi."); inCoda({azione:"elimina", id}); } else { S.edit.armed = true; renderModal(); } }
   else if(a === "refresh"){ aggiorna(true); }
+  else if(a === "cal"){ S.calId = v; S.modal = "cal"; render(); }
+  else if(a === "account"){ S.modal = "account"; render(); }
+  else if(a === "esci"){ esci(); }
+  else if(a === "savepin"){
+    const vv = (document.getElementById("pin-v") || {}).value || "", nn = (document.getElementById("pin-n") || {}).value || "";
+    if(!/^\d{4,6}$/.test(nn)){ toast("Il nuovo PIN deve avere da 4 a 6 cifre."); return; }
+    toast("Cambio il PIN…");
+    chiama({azione:"cambiaPin", vecchio:vv.trim(), nuovo:nn.trim()}).then(() => { S.modal = null; render(); toast("PIN cambiato."); }).catch(err => toast(err.message));
+  }
   else if(a === "copywa"){ const t = S.lastPub ? S.lastPub.msg : ""; try{ navigator.clipboard.writeText(t).then(() => toast("Messaggio copiato: incollalo nella bacheca."), () => { selectWa(); toast("Testo selezionato: copialo con il menu del telefono."); }); }catch(err){ selectWa(); } }
 });
 function selectWa(){ const n = document.getElementById("wamsg"); if(!n) return; const r = document.createRange(); r.selectNodeContents(n); const s = window.getSelection(); s.removeAllRanges(); s.addRange(r); }
@@ -957,17 +1017,46 @@ function mem(k, v){ try{ if(v === undefined) return localStorage.getItem(k); if(
 function api(){ return (typeof INDIRIZZO_SCRIPT === "string" && /^https:\/\/script\.google\.com\//.test(INDIRIZZO_SCRIPT)) ? INDIRIZZO_SCRIPT : null; }
 
 function schermata(html){ document.getElementById("app").innerHTML = `<div class="boot"><img src="${LOGO}" alt="DreaMusical Teatro">${html}</div>`; }
-function chiediCodice(errore){
-  schermata(`${errore ? `<div class="notice bad">${ic("alert")}<div>${esc(errore)}</div></div>` : ""}
-    <h1>Chi sei?</h1>
-    <p class="sub">Si entra dal proprio link personale, quello ricevuto in privato. Se l'app non ti riconosce, incolla qui il codice che ti ha dato il referente.</p>
-    <input id="codice" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="il tuo codice">
-    <button type="button" class="btn" id="entra">Entra</button>`);
-  document.getElementById("entra").onclick = () => {
-    const v = document.getElementById("codice").value.trim();
-    if(!v) return;
-    CODICE = v; mem(CHIAVE_K, v); avvia(true);
+let NOMI = null;
+function chiediCodice(errore){ accesso(errore); }
+function accesso(errore){
+  if(!api()){ schermata(`<div class="notice bad">${ic("alert")}<div>Manca l'indirizzo dello script nel file config.js.</div></div>`); return; }
+  const disegna = (msg) => {
+    const ultimo = mem("dm-nome") || "";
+    schermata(`${msg ? `<div class="notice bad">${ic("alert")}<div>${esc(msg)}</div></div>` : ""}
+      <h1>Chi sei?</h1>
+      <p class="sub">Scegli il tuo nome e inserisci il PIN che ti ha dato il referente. Lo chiede solo la prima volta su questo telefono.</p>
+      <label class="fl">Nome<select id="acc-nome"><option value="">Scegli…</option>${(NOMI || []).map(x => `<option value="${esc(x.id)}" ${x.id === ultimo ? "selected" : ""}>${esc(x.n)}</option>`).join("")}</select></label>
+      <label class="fl">PIN<input id="acc-pin" type="password" inputmode="numeric" autocomplete="current-password" maxlength="6" placeholder="4 cifre"></label>
+      <button type="button" class="btn" id="entra">Entra</button>
+      <p class="small muted">Hai dimenticato il PIN? Chiedine uno nuovo al referente.</p>`);
+    const go = () => {
+      const id = document.getElementById("acc-nome").value, pin = document.getElementById("acc-pin").value.trim();
+      if(!id){ disegna("Scegli il tuo nome."); return; }
+      if(!/^\d{4,6}$/.test(pin)){ disegna("Il PIN è fatto di 4 cifre."); return; }
+      mem("dm-nome", id);
+      const b = document.getElementById("entra"); b.disabled = true; b.textContent = "Controllo…";
+      fetch(api(), {method:"POST", body:JSON.stringify({azione:"accedi", id, pin}), redirect:"follow"})
+        .then(r => r.json())
+        .then(d => {
+          if(d.ok){ CODICE = d.k; mem(CHIAVE_K, d.k); VISTO_PRIMA = null; avvia(true); return; }
+          disegna({pin:"PIN sbagliato." + (d.restano ? (d.restano === 1 ? " Ancora un tentativo, poi il nome si blocca per 15 minuti." : " Puoi riprovare ancora " + d.restano + " volte.") : ""), bloccato:"Troppi tentativi sbagliati: riprova tra 15 minuti, oppure chiedi un PIN nuovo al referente.", nopin:"Non hai ancora un PIN: chiedilo al referente.", nome:"Nome non trovato: chiedi al referente."}[d.errore] || "Qualcosa non ha funzionato: riprova.");
+        })
+        .catch(() => disegna("Non riesco a contattare il foglio: controlla la connessione."));
+    };
+    document.getElementById("entra").onclick = go;
+    document.getElementById("acc-pin").addEventListener("keydown", e => { if(e.key === "Enter") go(); });
   };
+  if(NOMI){ disegna(errore); return; }
+  schermata(`<p class="sub">Un attimo…</p>`);
+  fetch(api() + "?azione=nomi", {redirect:"follow"}).then(r => r.json()).then(d => { NOMI = d.nomi || []; disegna(errore); })
+    .catch(() => schermata(`<div class="notice bad">${ic("alert")}<div>Non riesco a contattare il foglio. Controlla la connessione e riprova.</div></div><button type="button" class="btn" onclick="location.reload()">Riprova</button>`));
+}
+function esci(){
+  mem(CHIAVE_K, null); mem(CHIAVE_DATI, null);
+  CODICE = null; ME = null; VISTO_PRIMA = null; S = initState();
+  document.documentElement.classList.remove("modale-aperta");
+  accesso();
 }
 
 /* applica i dati arrivati dal foglio */
@@ -992,7 +1081,7 @@ function applyData(d){
   S.pub = (d.pubblicati || []).map(norm);
   if(ME.scrive.length && d.bozza){
     const bz = d.bozza.map(norm);
-    S.blocks = ME.scrive.length === 4 ? bz : bz.concat(S.pub.filter(b => !ME.scrive.includes(b.group)).map(clone));
+    S.blocks = tuttoIlProgramma() ? bz : bz.concat(S.pub.filter(b => !ME.scrive.includes(b.group)).map(clone));
   } else S.blocks = clone(S.pub);
   if(!S.view[S.role]) S.view[S.role] = "home";
   TODAY = oggiISO();
@@ -1076,7 +1165,7 @@ function aggiorna(manuale){
     .then(r => r.json())
     .then(d => {
       if(!d.ok){
-        if(d.errore === "codice"){ mem(CHIAVE_K, null); mem(CHIAVE_DATI, null); ME = null; CODICE = null; chiediCodice("Codice non riconosciuto: controlla il link personale o chiedine uno nuovo al referente."); return; }
+        if(d.errore === "codice"){ mem(CHIAVE_K, null); mem(CHIAVE_DATI, null); ME = null; CODICE = null; accesso("Il tuo accesso non è più valido (forse il PIN è stato cambiato): entra di nuovo."); return; }
         throw new Error(d.dettaglio || d.errore);
       }
       if(inAttesa){ S.sync = ""; statoBarra(); return; }
@@ -1090,11 +1179,9 @@ function aggiorna(manuale){
     });
 }
 
-function avvia(ignoraLink){
-  const q = ignoraLink ? null : new URLSearchParams(location.search).get("k");
-  if(q){ CODICE = q.trim(); mem(CHIAVE_K, CODICE); }
-  else if(!CODICE) CODICE = mem(CHIAVE_K);
-  if(!CODICE){ chiediCodice(); return; }
+function avvia(){
+  if(!CODICE) CODICE = mem(CHIAVE_K);
+  if(!CODICE){ accesso(); return; }
   try{
     const c = JSON.parse(mem(CHIAVE_DATI) || "null");
     if(c && c.k === CODICE && c.d && c.d.ok){ applyData(c.d); S.syncAt = c.d.ora ? Date.parse(c.d.ora) : null; render(); }

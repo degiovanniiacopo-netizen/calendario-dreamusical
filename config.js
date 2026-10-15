@@ -1,3 +1,3 @@
-// Incolla tra le virgolette l'indirizzo dell'App web di Apps Script
-// (quello che finisce con /exec). Non cambiare altro.
-const INDIRIZZO_SCRIPT = "https://script.google.com/macros/s/AKfycbwVgrCQR9UCMVXKX79YSjr4WfTfoJq_i5pRF4huWKmrwGdXWnfhpEoVN-Lpt9RCAjT1eQ/exec";
+// Indirizzo dello script del foglio DreaMusical (account dreamusical.teatro).
+// Cambia solo se lo script viene ripubblicato come «Nuovo deployment».
+const INDIRIZZO_SCRIPT = "https://script.google.com/macros/s/AKfycbx0iblyJeyiyIxKrYXYFuNVZ5GhigHpxe9u270qucYrhNjSJTda9dm52jJhCHhfRn-4/exec";
