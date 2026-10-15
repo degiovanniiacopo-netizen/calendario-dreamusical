@@ -545,7 +545,12 @@ function linkMat(testo){
   out.forEach(x => { if(!x.l) x.l = "Materiali"; });
   return out;
 }
-function linkA(u, testo){ return `<a class="mat" href="${esc(u)}" target="_blank" rel="noopener">${ic("link")}${esc(testo)}</a>`; }
+/* un file di Drive si apre nel visualizzatore leggero (niente app di Drive, si apre subito nel browser) */
+function linkDiretto(u){
+  const m = String(u).match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?(?:[^#]*&)?id=)([\w-]{10,})/);
+  return m ? "https://drive.google.com/file/d/" + m[1] + "/preview" : u;
+}
+function linkA(u, testo){ return `<a class="mat" href="${esc(linkDiretto(u))}" target="_blank" rel="noopener">${ic("link")}${esc(testo)}</a>`; }
 function mats(b){
   const sc = S.pubScenes, ids = b.scenes.filter(s => sc[s]);
   if(!ids.length) return "";
