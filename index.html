@@ -244,7 +244,7 @@ table.mx{border-collapse:collapse;font-size:.86rem;min-width:720px;width:100%}
 .fr3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 .fl{display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:.9rem;color:var(--ink);min-width:0}
 .fl .hint,.hint{font-weight:400;color:var(--muted);font-size:.82rem}
-.fl input{width:100%;border:1.5px solid var(--line);background:var(--surface);border-radius:9px;padding:8px 10px;font-size:16px;font-weight:400;min-width:0}
+.fl input,.fl textarea{width:100%;resize:vertical;border:1.5px solid var(--line);background:var(--surface);border-radius:9px;padding:8px 10px;font-size:16px;font-weight:400;min-width:0}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
 .chips.scroll{padding:2px}
 .c{border:1.5px solid var(--line);background:var(--surface);color:var(--ink2);border-radius:999px;padding:5px 11px;font-size:.86rem;font-weight:600}
@@ -330,7 +330,7 @@ let DEBUT = "";
 let VENUE = "Teatro";
 let PLACES = ["Teatro"];
 let PLACE_ADDR = {};
-let DEF_START = "20.45", DEF_END = "23.30";
+let DEF_START = "20.30", DEF_END = "23.30";
 const LINK = location.origin + location.pathname;
 
 const GROUPS = {compagnia:"Compagnia", direttivo:"Direttivo", segreti:"Segreti di famiglia", sartoria:"Sartoria e trucco", scenografia:"Scenografia"};
@@ -413,9 +413,18 @@ function convOf(b, scenes){
   if(b.conv === "chars" && b.people.length) b.people.forEach(id => { if(!ids.includes(id)) ids.push(id); });
   return ids;
 }
+/* pagine del copione di un gruppo di scene, per esempio «pag. 41–56» */
+function pagine(ids, scenes){
+  const nn = [];
+  ids.forEach(s => { const x = scenes[s]; if(x) (String(x.n).match(/\d+/g) || []).forEach(v => nn.push(Number(v))); });
+  if(!nn.length) return "";
+  const a = Math.min(...nn), z = Math.max(...nn);
+  return "pag. " + (a === z ? a : a + "–" + z);
+}
 function titleOf(b, scenes){
   if(b.title) return b.title;
-  let t = b.scenes.map(s => scenes[s] ? scenes[s].name : s).join(" e ");
+  const pg = pagine(b.scenes, scenes);
+  let t = (pg ? pg + ": " : "") + listIt(b.scenes.map(s => scenes[s] ? scenes[s].name : s));
   if(b.only && b.only.length) t += ", solo "+b.only.join(", ");
   return t || "(scena da scegliere)";
 }
@@ -555,8 +564,9 @@ function vHome(){
         ${role?`<dt>Tu sei</dt><dd>${esc(role)}</dd>`:""}
         ${sameDay.some(condText)?`<dt>Con</dt><dd>${esc(sameDay.map(condText).filter(Boolean).join("; "))}</dd>`:""}
         <dt>Dove</dt><dd>${esc(next.place || "luogo da definire")}${PLACE_ADDR[next.place]?`<span class="muted small"> · ${PLACE_ADDR[next.place]}</span>`:""}</dd>
-        ${isRehearsal(next) && next.start==="20.45"?`<dt>Orario</dt><dd>riscaldamento dalle 20.30, inizio puntuale alle 20.45, fine alle 23.30</dd>`:`<dt>Orario</dt><dd>dalle ${next.start} alle ${next.end}</dd>`}
+        <dt>Orario</dt><dd>dalle ${next.start} alle ${next.end}</dd>
         ${BRING[next.type]?`<dt>Porta</dt><dd>${esc(BRING[next.type])}</dd>`:""}
+        ${[...new Set(sameDay.map(b => b.note).filter(Boolean))].length?`<dt>Nota</dt><dd>${[...new Set(sameDay.map(b => b.note).filter(Boolean))].map(esc).join("<br>")}</dd>`:""}
       </dl>
       ${sameDay.map(mats).join("")}
       <div class="mats">${sameDay.filter(b => convOf(b, sc).includes(pid) || b.cond.includes(pid)).map(b => `<button type="button" class="mat" data-a="cal" data-v="${b.id}">${ic("cal")}${sameDay.length > 1 ? "Calendario: "+esc(TYPE[b.type]) : "Aggiungi al calendario"}</button>`).join("")}</div>
@@ -589,6 +599,7 @@ function evRow(b, pid, mineOnly){
   return `<div class="ev g-${b.group} ${!mineOnly && !me ? "dim" : ""}"><div class="tm">${b.start}–${b.end}</div><div>
     <div class="tt">${esc(TYPE[b.type])}: ${esc(titleOf(b, sc))}</div>
     <div class="mt"><span class="gtag">${GROUPS[b.group]}</span>${role?`<span>tu: ${esc(role)}</span>`:""}${condText(b)?`<span>con ${esc(condText(b))}</span>`:""}<span>${b.place?esc(b.place):"luogo da definire"}</span>${!mineOnly&&me?`<span class="badge b-sky">ci sei</span>`:""}${chg?`<span class="badge b-orange">Cambiato: prima era ${esc(chg)}</span>`:""}${S.nuovi && S.nuovi[b.id]?`<span class="badge b-sky">Nuovo</span>`:""}</div>
+    ${b.note?`<div class="mt"><span>${esc(b.note)}</span></div>`:""}
     ${segCast?`<div class="mt"><span>Cast della serata: ${esc(segCast.join(", "))}</span></div>`:""}
     ${b.type==="costume"||b.type==="laboratorio"?`<div class="mt"><span>Convocati: ${esc(cv.map(pname).join(", "))}</span></div>`:""}
     ${me && b.date >= TODAY ? `<div class="mats"><button type="button" class="mat" data-a="cal" data-v="${b.id}">${ic("cal")}Aggiungi al calendario</button></div>` : ""}
@@ -642,7 +653,7 @@ function vMieScene(pid){
   return `<p class="sub">Sei ${esc(listIt(P[pid].ch.map(chLabel)))}. Sei in ${mine.length} scene su ${SCENE_ORDER.length}: eccole in ordine, con chi altro c'è.</p>
     <div class="stack">${mine.map(s => { const x = sc[s]; const others = Object.keys(P).filter(id => id !== pid && inScene(id, x)).map(pname);
       return `<section class="card stack" style="gap:8px">
-      <div class="row" style="justify-content:space-between"><h3>${esc(x.name)}</h3><span class="small muted">${ACT[x.act]}, scena ${esc(x.n)}</span></div>
+      <div class="row" style="justify-content:space-between"><h3>${esc(x.name)}</h3><span class="small muted">${ACT[x.act]}, pag. ${esc(x.n)}</span></div>
       <p class="small">Con ${esc(dot(listIt(others)))}</p>
       <div class="mats"><button type="button" class="mat" data-a="mat">${ic("link")}Base e video</button><button type="button" class="mat" data-a="mat">${ic("link")}Copione</button></div>
     </section>`; }).join("")}</div>`;
@@ -738,10 +749,13 @@ function vFoglio(scope){
 }
 
 /* ---------- scheda di modifica ---------- */
+/* orario proposto: la domenica 10–13, gli altri giorni quello del foglio (20.30–23.30) */
+function orariDi(d){ return dt(d).getDay() === 0 ? ["10.00","13.00"] : [DEF_START, DEF_END]; }
 function newBlock(date, scope){
   const d = date || S.month+"-"+(S.month === TODAY.slice(0,7) ? TODAY.slice(8) : "01");
-  if(scope){ const t = TYPES_BY_GROUP[scope][0]; return {id:"n"+Date.now().toString(36), date:d, start:DEF_START, end:DEF_END, type:t, scenes:[], only:[], cond:[], conv:defaultConv(t, scope), people:[], chars:[], place:PLACES.includes("Sede") ? "Sede" : VENUE, group:scope, title:"", note:""}; }
-  return {id:"n"+Date.now().toString(36), date:d, start:DEF_START, end:DEF_END, type:"scena", scenes:[], only:[], cond:[], conv:"auto", people:[], chars:[], place:VENUE, group:"compagnia", title:"", note:""};
+  const [DS, DE] = orariDi(d);
+  if(scope){ const t = TYPES_BY_GROUP[scope][0]; return {id:"n"+Date.now().toString(36), date:d, start:DS, end:DE, type:t, scenes:[], only:[], cond:[], conv:defaultConv(t, scope), people:[], chars:[], place:PLACES.includes("Sede") ? "Sede" : VENUE, group:scope, title:"", note:""}; }
+  return {id:"n"+Date.now().toString(36), date:d, start:DS, end:DE, type:"scena", scenes:[], only:[], cond:[], conv:"auto", people:[], chars:[], place:VENUE, group:"compagnia", title:"", note:""};
 }
 function editorHTML(){
   const e = S.edit, b = e.b, sc = S.scenes;
@@ -765,12 +779,13 @@ function editorHTML(){
       ${S.scope ? `<div class="fl">Gruppo<div class="chips"><span class="c" aria-pressed="true">${GROUPS[b.group]}</span></div><span class="hint">Da qui puoi creare solo impegni di ${GROUPS[b.group]}.</span></div>` : `<div class="fl">Gruppo<div class="chips">${GROUP_ORDER.map(g => chip("group", g, b.group === g, GROUPS[g])).join("")}</div><span class="hint">Decide chi vede l'impegno.</span></div>`}
       <div class="fl">Tipo<div class="chips">${types.map(t => chip("type", t, b.type === t, TYPE[t])).join("")}</div></div>
       <div class="fl">Chi è convocato<div class="chips">${convOpts.map(o => chip("conv", o, convKind === o, CONV_LABEL[o])).join("")}</div></div>
-      ${convKind === "auto" ? `<div class="fl">Scene<div class="chips scroll">${SCENE_ORDER.map(s => chip("scene", s, b.scenes.includes(s), (sc[s].act==="II"?"II·":"")+sc[s].n+" "+sc[s].name)).join("")}</div></div>
+      ${convKind === "auto" ? `<div class="fl">Scene<div class="chips scroll">${SCENE_ORDER.map(s => chip("scene", s, b.scenes.includes(s), sc[s].name+" · pag. "+sc[s].n)).join("")}</div></div>
         ${sceneChars.length ? `<div class="fl">Solo alcuni personaggi? <span class="hint">Lascia tutto spento per convocare tutta la scena.</span><div class="chips">${sceneChars.map(c => chip("only", c, b.only.includes(c), c)).join("")}</div></div>` : ""}` : ""}
       ${convKind === "chars" ? `<div class="fl">Personaggi<div class="chips">${CHARS.map(c => chip("chars", c, b.chars.includes(c), c)).join("")}</div></div>` : ""}
       ${convKind === "manual" || convKind === "chars" ? `<div class="fl">${convKind==="chars"?"In più, queste persone":"Persone"}<div class="chips scroll">${pool.map(id => chip("people", id, b.people.includes(id), P[id].n)).join("")}</div></div>` : ""}
       ${["coreografia","scena","canto","insieme"].includes(b.type) ? `<div class="fl">Chi conduce<div class="chips">${CONDUCTORS.map(id => chip("cond", id, b.cond.includes(id), P[id].n+" ("+P[id].cond+")")).join("")}</div></div>` : ""}
       ${convKind !== "auto" ? `<label class="fl">Titolo<input type="text" id="ed-title" data-e="title" value="${esc(b.title)}" placeholder="per esempio: ${({compagnia:"Filato secondo atto", scenografia:"Montaggio del castello", sartoria:"Prova costumi del primo atto", direttivo:"Riunione di ottobre", segreti:"Cena da Elia"})[b.group]}"></label>` : ""}
+      <label class="fl">Nota per i convocati <span class="hint">facoltativa, per esempio: arrivate con le pagine a memoria</span><textarea id="ed-note" data-e="note" rows="2" maxlength="300">${esc(b.note || "")}</textarea></label>
       <div class="fl">Luogo<div class="chips">${PLACES.map(pl => chip("place", pl, b.place === pl, pl)).join("")}${chip("place", "__altro", !!b.place && !PLACES.includes(b.place), "Altro…")}</div>
         ${(!!b.place && !PLACES.includes(b.place)) || S.edit.otherPlace ? `<input type="text" id="ed-place" data-e="place" value="${esc(PLACES.includes(b.place) ? "" : b.place)}" placeholder="Scrivi il luogo">` : ""}</div>
     </div>
@@ -871,7 +886,7 @@ function vMappa(){
     <section class="card stack"><div class="row" style="justify-content:space-between"><h2>Chi c'è in ogni scena</h2><span class="small muted">si modifica nel foglio, scheda Scene</span></div>
       <div style="overflow-x:auto"><table class="mx"><thead><tr><th>Scena</th>${COLS.map(c => `<th>${esc(c.replace("Frau ","F. ").replace("Mr. ",""))}</th>`).join("")}<th>Ensemble</th></tr></thead>
       <tbody>${SCENE_ORDER.map(s => { const x = S.scenes[s]; const ensN = x.on.includes("Ensemble") ? Object.keys(P).filter(id => P[id].ch.includes("Ensemble") && !x.ensOut.includes(id)).length : 0;
-        return `<tr><td>${esc(x.n)} ${esc(x.name)}</td>${COLS.map(c => { const on = x.on.includes(c); return `<td><span class="tog" aria-label="${esc(c)}${on?" in scena":" assente"}" ${on?'aria-pressed="true"':''}>${on?ic("check"):""}</span></td>`; }).join("")}<td class="small">${ensN?ensN:"–"}</td></tr>`; }).join("")}</tbody></table></div>
+        return `<tr><td>${esc(x.name)} <span class="small muted">pag. ${esc(x.n)}</span></td>${COLS.map(c => { const on = x.on.includes(c); return `<td><span class="tog" aria-label="${esc(c)}${on?" in scena":" assente"}" ${on?'aria-pressed="true"':''}>${on?ic("check"):""}</span></td>`; }).join("")}<td class="small">${ensN?ensN:"–"}</td></tr>`; }).join("")}</tbody></table></div>
     </section>`;
 }
 
@@ -993,14 +1008,15 @@ document.addEventListener("click", e => {
 function selectWa(){ const n = document.getElementById("wamsg"); if(!n) return; const r = document.createRange(); r.selectNodeContents(n); const s = window.getSelection(); s.removeAllRanges(); s.addRange(r); }
 document.addEventListener("input", e => {
   const t = e.target, k = t.dataset.e; if(!k || !S.edit) return;
-  if(k === "title" || k === "place") S.edit.b[k] = t.value;
+  if(k === "title" || k === "place" || k === "note") S.edit.b[k] = t.value;
 });
 document.addEventListener("change", e => {
   const t = e.target;
   if(t.dataset.e && S.edit){ const k = t.dataset.e, b = S.edit.b;
-    if(k === "date" && t.value) b.date = t.value;
+    if(k === "note"){ b.note = t.value.trim(); return; }
+    if(k === "date" && t.value){ const [s0, e0] = orariDi(b.date); if(b.start === s0 && b.end === e0){ const [s1, e1] = orariDi(t.value); b.start = s1; b.end = e1; } b.date = t.value; }
     else if((k === "start" || k === "end") && t.value) b[k] = t.value.replace(":",".");
-    else if(k === "title" || k === "place") b[k] = t.value.trim();
+    else if(k === "title" || k === "place" || k === "note") b[k] = t.value.trim();
     renderModal(); return; }
   const f = t.dataset.f; if(!f) return;
   const b = S.blocks.find(x => x.id === t.dataset.b); if(!b) return;
@@ -1067,7 +1083,7 @@ function applyData(d){
   PLACES = (imp.luoghi && imp.luoghi.length) ? imp.luoghi : ["Teatro"];
   VENUE = PLACES[0];
   PLACE_ADDR = imp.indirizzi || {};
-  DEF_START = imp.inizio || "20.45"; DEF_END = imp.fine || "23.30";
+  DEF_START = imp.inizio || "20.30"; DEF_END = imp.fine || "23.30";
   P = d.persone || {};
   if(!P[ME.id]) P[ME.id] = {n:ME.nome, g:[], role:"", ch:[], cond:""};
   SCENE_ORDER = (d.ordine || []).filter(id => d.scene && d.scene[id]);
