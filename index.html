@@ -20,7 +20,7 @@
 :root{
   --bg:#FFFFFF; --surface:#FFFFFF; --soft:#EDF4FA; --ink:#242E63; --ink2:#46517F; --muted:#6E7A9C; --line:#D6E3EF;
   --brand:#242E63; --brand2:#3A5A93; --on-brand:#FFFFFF; --sky:#5B96BF; --sky-ink:#3A76A3; --sky-soft:#DCEBF6; --light:#A8CFEA;
-  --g-compagnia:#242E63; --g-direttivo:#6E7A9C; --g-segreti:#3A76A3; --g-sartoria:#5B96BF; --g-scenografia:#2F8A88;
+  --g-compagnia:#242E63; --g-direttivo:#6E7A9C; --g-segreti:#3A76A3; --g-sartoria:#5B96BF; --g-scenografia:#2E6DB4;
   --red:#B33A3A; --green:#2D7A4C; --orange:#B8620F;
   --f-display:'Barlow Condensed','Arial Narrow',Arial,sans-serif;
   --f-body:'Barlow','Segoe UI',Arial,sans-serif;
@@ -30,14 +30,14 @@
   :root:not([data-theme="light"]){
     --bg:#0E1430; --surface:#161E44; --soft:#1E2855; --ink:#EEF3FA; --ink2:#C8D3E8; --muted:#96A3C3; --line:#2B3668;
     --brand:#242E63; --brand2:#3A5A93; --on-brand:#FFFFFF; --sky:#7FB3DA; --sky-ink:#9CC6E6; --sky-soft:#22325F; --light:#A8CFEA;
-    --g-compagnia:#9AA6E0; --g-direttivo:#A3AEC6; --g-segreti:#7FB3DA; --g-sartoria:#A9D0EC; --g-scenografia:#7CC9C4;
+    --g-compagnia:#9AA6E0; --g-direttivo:#A3AEC6; --g-segreti:#7FB3DA; --g-sartoria:#A9D0EC; --g-scenografia:#6AAEF0;
     --red:#EE8A84; --green:#7FD0A0; --orange:#EFA55A; color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
   --bg:#0E1430; --surface:#161E44; --soft:#1E2855; --ink:#EEF3FA; --ink2:#C8D3E8; --muted:#96A3C3; --line:#2B3668;
   --brand:#242E63; --brand2:#3A5A93; --on-brand:#FFFFFF; --sky:#7FB3DA; --sky-ink:#9CC6E6; --sky-soft:#22325F; --light:#A8CFEA;
-  --g-compagnia:#9AA6E0; --g-direttivo:#A3AEC6; --g-segreti:#7FB3DA; --g-sartoria:#A9D0EC; --g-scenografia:#7CC9C4;
+  --g-compagnia:#9AA6E0; --g-direttivo:#A3AEC6; --g-segreti:#7FB3DA; --g-sartoria:#A9D0EC; --g-scenografia:#6AAEF0;
   --red:#EE8A84; --green:#7FD0A0; --orange:#EFA55A; color-scheme:dark;
 }
 *{box-sizing:border-box}
@@ -577,8 +577,8 @@ function vHome(){
       <h1>Ciao ${esc(ME.nome.split(" ")[0])}, ecco cosa ti riguarda</h1>
       <p class="sub">${ME.referente ? "Come referente non sei convocato a nulla: da qui entri in tutti i gruppi per controllare che tutto funzioni." : "Gli impegni di tutti i tuoi gruppi a cui sei convocato, in un posto solo. Se c'è prova ma non servi, te lo dice."}</p>
     </div></div>
-    ${groupCards(pid)}
     ${marquee()}
+    ${groupCards(pid)}
     ${hero}
     <div class="days">${cards}</div>`;
 }
@@ -893,7 +893,7 @@ function calModal(){
     <div class="row"><h2>Aggiungi al calendario</h2><button type="button" class="x" data-a="close" aria-label="Chiudi">${ic("x")}</button></div>
     <p><b>${esc(l.titolo)}</b><br><span class="muted">${esc(cap(fmtDay(b.date)))}, ${b.start}–${b.end}${b.place ? " · " + esc(b.place) : ""}</span></p>
     <a class="btn" href="${esc(l.ics)}" target="_blank" rel="noopener">${ic("cal")}Calendario di iPhone (o Outlook)</a>
-    <a class="btn sec" href="${esc(l.gcal)}" target="_blank" rel="noopener">${ic("cal")}Google Calendar (Android)</a>
+    <a class="btn sec" href="${esc(l.gcal)}" target="_blank" rel="noopener">${ic("cal")}Google Calendar</a>
     <p class="small muted">È una copia: se l'impegno cambia, nel calendario del telefono resta quello vecchio. Il programma giusto è sempre qui nell'app.</p>
   </div></div>`;
 }
