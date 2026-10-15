@@ -329,7 +329,7 @@ let TODAY = oggiISO();
 let DEBUT = "";
 let VENUE = "Teatro";
 let PLACES = ["Teatro"];
-let PLACE_ADDR = {};
+let PLACE_ADDR = {}, COPIONE = "";
 let DEF_START = "20.30", DEF_END = "23.30";
 const LINK = location.origin + location.pathname;
 
@@ -531,11 +531,28 @@ function marquee(){
     <div class="bulbs"></div>
   </section>`;
 }
+/* link dei materiali di una scena, dalla colonna «materiali» del foglio.
+   Uno solo: «https://...»  oppure più di uno con il nome davanti: «Base: https://...  Video: https://...» */
+function linkMat(testo){
+  const out = [], re = /https?:\/\/[^\s,;]+/g;
+  let m, prima = 0;
+  const t = String(testo || "");
+  while((m = re.exec(t))){
+    const l = t.slice(prima, m.index).replace(/[\s,;:–-]+$/,"").replace(/^[\s,;:–-]+/,"").trim();
+    out.push({l: l, u: m[0]}); prima = m.index + m[0].length;
+  }
+  if(out.length === 1 && !out[0].l) out[0].l = "Basi e video";
+  out.forEach(x => { if(!x.l) x.l = "Materiali"; });
+  return out;
+}
+function linkA(u, testo){ return `<a class="mat" href="${esc(u)}" target="_blank" rel="noopener">${ic("link")}${esc(testo)}</a>`; }
 function mats(b){
-  if(b.conv !== "auto") return "";
-  const conLink = b.scenes.filter(s => S.pubScenes[s] && /^https?:\/\//.test(S.pubScenes[s].mat || ""));
-  if(!conLink.length) return "";
-  return `<div class="mats">${conLink.map(s => `<a class="mat" href="${esc(S.pubScenes[s].mat)}" target="_blank" rel="noopener">${ic("link")}Materiali: ${esc(S.pubScenes[s].name)}</a>`).join("")}</div>`;
+  const sc = S.pubScenes, ids = b.scenes.filter(s => sc[s]);
+  if(!ids.length) return "";
+  const links = [];
+  ids.forEach(s => linkMat(sc[s].mat).forEach(x => links.push(linkA(x.u, ids.length > 1 ? x.l + ": " + sc[s].name : x.l))));
+  if(COPIONE){ const pg = pagine(ids, sc); links.push(linkA(COPIONE, "Copione" + (pg ? ", " + pg : ""))); }
+  return links.length ? `<div class="mats">${links.join("")}</div>` : "";
 }
 function groupCards(pid){
   const mine = GROUP_ORDER.filter(g => inGroup(pid, g)), sc = S.pubScenes;
@@ -651,11 +668,13 @@ function vMieScene(pid){
   const sc = S.pubScenes;
   const mine = SCENE_ORDER.filter(s => inScene(pid, sc[s]));
   return `<p class="sub">Sei ${esc(listIt(P[pid].ch.map(chLabel)))}. Sei in ${mine.length} scene su ${SCENE_ORDER.length}: eccole in ordine, con chi altro c'è.</p>
+    ${COPIONE ? `<div class="mats">${linkA(COPIONE, "Apri il copione")}</div>` : ""}
     <div class="stack">${mine.map(s => { const x = sc[s]; const others = Object.keys(P).filter(id => id !== pid && inScene(id, x)).map(pname);
       return `<section class="card stack" style="gap:8px">
       <div class="row" style="justify-content:space-between"><h3>${esc(x.name)}</h3><span class="small muted">${ACT[x.act]}, pag. ${esc(x.n)}</span></div>
       <p class="small">Con ${esc(dot(listIt(others)))}</p>
-      <div class="mats"><button type="button" class="mat" data-a="mat">${ic("link")}Base e video</button><button type="button" class="mat" data-a="mat">${ic("link")}Copione</button></div>
+      ${(() => { const l = linkMat(x.mat).map(m => linkA(m.u, m.l)); if(COPIONE) l.push(linkA(COPIONE, "Copione, pag. " + x.n));
+        return l.length ? `<div class="mats">${l.join("")}</div>` : `<p class="small muted">Basi e video non ancora caricati.</p>`; })()}
     </section>`; }).join("")}</div>`;
 }
 
@@ -1083,6 +1102,7 @@ function applyData(d){
   PLACES = (imp.luoghi && imp.luoghi.length) ? imp.luoghi : ["Teatro"];
   VENUE = PLACES[0];
   PLACE_ADDR = imp.indirizzi || {};
+  COPIONE = /^https?:\/\//.test(imp.copione || "") ? imp.copione : "";
   DEF_START = imp.inizio || "20.30"; DEF_END = imp.fine || "23.30";
   P = d.persone || {};
   if(!P[ME.id]) P[ME.id] = {n:ME.nome, g:[], role:"", ch:[], cond:""};
